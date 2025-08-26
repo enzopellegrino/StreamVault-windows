@@ -20,7 +20,7 @@ public partial class VirtualMonitorListDialog : Form
         
         foreach (var monitor in _virtualMonitors)
         {
-            listBoxMonitors.Items.Add($"{monitor.Name} - {monitor.Width}x{monitor.Height} (Created: {monitor.CreatedAt:MM/dd HH:mm})");
+            listBoxMonitors.Items.Add($"{monitor.Name} - {monitor.Resolution.Width}x{monitor.Resolution.Height} (Created: {monitor.CreatedAt:MM/dd HH:mm})");
         }
 
         if (listBoxMonitors.Items.Count > 0)
@@ -39,10 +39,9 @@ public partial class VirtualMonitorListDialog : Form
             
             // Update details
             var monitor = _selectedMonitor;
-            labelDetails.Text = $"ID: {monitor.Id:N}\n" +
-                               $"Size: {monitor.Width}x{monitor.Height}\n" +
+            labelDetails.Text = $"ID: {monitor.Id}\n" +
+                               $"Size: {monitor.Resolution.Width}x{monitor.Resolution.Height}\n" +
                                $"Status: {(monitor.IsActive ? "Active" : "Inactive")}\n" +
-                               $"Driver: {monitor.DriverType}\n" +
                                $"Created: {monitor.CreatedAt:yyyy-MM-dd HH:mm:ss}";
             
             buttonRemove.Enabled = true;

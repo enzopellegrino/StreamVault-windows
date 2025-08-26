@@ -257,33 +257,45 @@ public partial class MultiStreamForm : Form
     {
         try
         {
-            // Create a new virtual monitor stream session
-            var newSession = new StreamSession
+            // Show virtual monitor setup dialog
+            using var setupDialog = new VirtualMonitorSetupDialog();
+            
+            if (setupDialog.ShowDialog(this) == DialogResult.OK && setupDialog.VirtualMonitor != null)
             {
-                Id = Guid.NewGuid().ToString(),
-                MonitorId = $"Virtual_{DateTime.Now:HHmmss}",
-                MonitorName = $"Virtual Monitor {_config.StreamSessions.Count + 1}",
-                SrtUrl = $"srt://{textBoxBaseHost.Text}:{(int)numericBasePort.Value + _config.StreamSessions.Count}",
-                Status = "Ready",
-                IsVirtual = true
-            };
+                var virtualMonitor = setupDialog.VirtualMonitor;
+                
+                // Add to virtual monitors list
+                _config.VirtualMonitors.Add(virtualMonitor);
+                
+                // Create a new virtual monitor stream session
+                var newSession = new StreamSession
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    VirtualMonitor = virtualMonitor,
+                    MonitorId = virtualMonitor.Id,
+                    MonitorName = virtualMonitor.Name,
+                    SrtUrl = $"srt://{textBoxBaseHost.Text}:{(int)numericBasePort.Value + _config.StreamSessions.Count}",
+                    Status = "Ready",
+                    IsVirtual = true
+                };
 
-            _config.StreamSessions.Add(newSession);
-            RefreshStreamGrid();
-            
-            _logger.Log($"Added virtual monitor: {newSession.MonitorName}");
-            
-            // Save configuration
-            if (!_isInitializing)
-            {
-                _saveTimer.Stop();
-                _saveTimer.Start();
+                _config.StreamSessions.Add(newSession);
+                RefreshStreamGrid();
+                
+                _logger.Log($"Added virtual monitor: {virtualMonitor.Name} based on Monitor {virtualMonitor.SourceMonitorIndex + 1}");
+                
+                // Save configuration
+                if (!_isInitializing)
+                {
+                    _saveTimer.Stop();
+                    _saveTimer.Start();
+                }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error adding monitor: {ex.Message}", ex);
-            MessageBox.Show($"Error adding monitor: {ex.Message}", "Error", 
+            _logger.LogError($"Error adding virtual monitor: {ex.Message}", ex);
+            MessageBox.Show($"Error adding virtual monitor: {ex.Message}", "Error", 
                            MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }

@@ -6,6 +6,7 @@ namespace StreamVault.Models;
 public class MultiStreamConfig
 {
     public List<StreamSession> StreamSessions { get; set; } = new();
+    public List<VirtualMonitorInfo> VirtualMonitors { get; set; } = new();
     public bool AutoStartChrome { get; set; } = true;
     public string ChromePath { get; set; } = string.Empty;
     public string DefaultChromeUrl { get; set; } = "https://www.google.com";
@@ -20,6 +21,7 @@ public class StreamSession
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public MonitorInfo? Monitor { get; set; } = null;
+    public VirtualMonitorInfo? VirtualMonitor { get; set; } = null;
     public string MonitorId { get; set; } = string.Empty;
     public string MonitorName { get; set; } = string.Empty;
     public string SrtUrl { get; set; } = string.Empty;
@@ -32,9 +34,17 @@ public class StreamSession
     public DateTime StartTime { get; set; }
     public string Status { get; set; } = "Ready";
     
+    /// <summary>
+    /// Gets the effective monitor info (physical or virtual)
+    /// </summary>
+    public MonitorInfo? GetEffectiveMonitor()
+    {
+        return IsVirtual ? VirtualMonitor?.ToMonitorInfo() : Monitor;
+    }
+    
     public override string ToString()
     {
-        var displayName = IsVirtual ? MonitorName : Monitor?.DeviceName ?? MonitorName;
+        var displayName = IsVirtual ? VirtualMonitor?.Name ?? MonitorName : Monitor?.DeviceName ?? MonitorName;
         return $"{displayName} → {SrtUrl} ({Status})";
     }
 }

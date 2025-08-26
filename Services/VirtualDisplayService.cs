@@ -42,10 +42,11 @@ public class VirtualDisplayService
             // Create virtual monitor configuration
             var virtualMonitor = new VirtualMonitorInfo
             {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 Name = name,
-                Width = width,
-                Height = height,
+                Resolution = new System.Drawing.Size(width, height),
+                Bounds = new System.Drawing.Rectangle(0, 0, width, height),
+                SourceMonitorIndex = 0, // Default to primary monitor
                 IsActive = false,
                 CreatedAt = DateTime.Now
             };
@@ -76,7 +77,7 @@ public class VirtualDisplayService
     /// <summary>
     /// Removes a virtual monitor
     /// </summary>
-    public async Task<bool> RemoveVirtualMonitorAsync(Guid monitorId)
+    public async Task<bool> RemoveVirtualMonitorAsync(string monitorId)
     {
         try
         {
@@ -150,7 +151,7 @@ public class VirtualDisplayService
             
             await Task.Delay(500); // Simulate creation time
             
-            _logger.Log($"Virtual monitor simulated: {monitor.Name} ({monitor.Width}x{monitor.Height})");
+            _logger.Log($"Virtual monitor simulated: {monitor.Name} ({monitor.Resolution.Width}x{monitor.Resolution.Height})");
             
             // In a real implementation, here you would:
             // 1. Call Windows Display APIs

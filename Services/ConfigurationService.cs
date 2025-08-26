@@ -11,10 +11,14 @@ public class ConfigurationService
     public ConfigurationService(LoggingService logger)
     {
         _logger = logger;
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolder = Path.Combine(appDataPath, "StreamVault");
-        Directory.CreateDirectory(appFolder);
-        _configFilePath = Path.Combine(appFolder, "config.json");
+        
+        // Use the application directory instead of AppData
+        var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        var configDirectory = Path.Combine(appDirectory, "Config");
+        Directory.CreateDirectory(configDirectory);
+        _configFilePath = Path.Combine(configDirectory, "config.json");
+        
+        _logger.Log($"Configuration will be stored in: {_configFilePath}");
     }
 
     public async Task<MultiStreamConfig> LoadConfigurationAsync()

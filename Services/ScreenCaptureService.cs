@@ -35,6 +35,7 @@ public class ScreenCaptureService
                 {
                     DeviceName = screen.DeviceName,
                     FriendlyName = GetFriendlyMonitorName(screen.DeviceName, i),
+                    Index = i,
                     Width = screen.Bounds.Width,
                     Height = screen.Bounds.Height,
                     Left = screen.Bounds.Left,

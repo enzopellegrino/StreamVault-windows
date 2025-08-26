@@ -44,16 +44,23 @@ public class MultiStreamService
             // Step 1: Launch Chrome on all monitors if enabled
             if (config.AutoStartChrome)
             {
-                var monitors = config.StreamSessions.Select(s => s.Monitor).ToList();
-                var chromeSuccess = await _chromeService.LaunchChromeOnAllMonitorsAsync(monitors, config.DefaultChromeUrl);
-                
-                if (!chromeSuccess)
+                var physicalMonitors = config.StreamSessions
+                    .Where(s => !s.IsVirtual && s.Monitor != null)
+                    .Select(s => s.Monitor!)
+                    .ToList();
+                    
+                if (physicalMonitors.Count > 0)
                 {
-                    _logger.LogWarning("Some Chrome instances failed to launch, but continuing with streaming");
+                    var chromeSuccess = await _chromeService.LaunchChromeOnAllMonitorsAsync(physicalMonitors, config.DefaultChromeUrl);
+                    
+                    if (!chromeSuccess)
+                    {
+                        _logger.LogWarning("Some Chrome instances failed to launch, but continuing with streaming");
+                    }
+                    
+                    // Wait for Chrome to fully load
+                    await Task.Delay(3000);
                 }
-                
-                // Wait for Chrome to fully load
-                await Task.Delay(3000);
             }
 
             // Step 2: Start streaming for each monitor
@@ -86,11 +93,21 @@ public class MultiStreamService
         {
             if (_activeStreams.ContainsKey(session.Id))
             {
-                _logger.LogWarning($"Stream already active for {session.Monitor.DeviceName}");
+                var displayName = session.IsVirtual ? session.VirtualMonitor?.Name : session.Monitor?.DeviceName;
+                _logger.LogWarning($"Stream already active for {displayName}");
                 return false;
             }
 
             _logger.Log($"Starting stream: {session}");
+
+            // Get the effective monitor (physical or virtual)
+            var effectiveMonitor = session.GetEffectiveMonitor();
+            if (effectiveMonitor == null)
+            {
+                _logger.LogError($"No monitor found for session {session.Id}");
+                session.Status = "No monitor found";
+                return false;
+            }
 
             // Create FFmpeg service for this stream
             var ffmpegService = new FFmpegService(_logger);
@@ -100,9 +117,9 @@ public class MultiStreamService
             ffmpegService.ProcessStopped += (sender, e) => OnStreamStopped(session);
             ffmpegService.DataReceived += (sender, data) => OnStreamDataReceived(session, data);
 
-            // Start the stream
+            // Start the stream using the appropriate monitor
             var success = await ffmpegService.StartScreenCaptureAsync(
-                session.Monitor.DeviceName,
+                effectiveMonitor.DeviceName,
                 session.SrtUrl,
                 session.Fps,
                 session.Bitrate
@@ -116,20 +133,23 @@ public class MultiStreamService
                 session.Status = "Streaming";
                 
                 StreamStarted?.Invoke(this, session);
-                _logger.Log($"Stream started successfully: {session.Monitor.DeviceName}");
+                var displayName = session.IsVirtual ? session.VirtualMonitor?.Name : session.Monitor?.DeviceName;
+                _logger.Log($"Stream started successfully: {displayName}");
                 return true;
             }
             else
             {
                 session.Status = "Failed to start";
-                _logger.LogError($"Failed to start stream: {session.Monitor.DeviceName}");
+                var displayName = session.IsVirtual ? session.VirtualMonitor?.Name : session.Monitor?.DeviceName;
+                _logger.LogError($"Failed to start stream: {displayName}");
                 return false;
             }
         }
         catch (Exception ex)
         {
             session.Status = $"Error: {ex.Message}";
-            _logger.LogError($"Error starting stream {session.Monitor.DeviceName}: {ex.Message}", ex);
+            var displayName = session.IsVirtual ? session.VirtualMonitor?.Name : session.Monitor?.DeviceName;
+            _logger.LogError($"Error starting stream {displayName}: {ex.Message}", ex);
             return false;
         }
     }

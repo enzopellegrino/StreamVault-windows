@@ -315,45 +315,17 @@ public partial class MainForm : Form
     {
         try
         {
-            using var dialog = new VirtualMonitorDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                buttonCreateVirtualMonitor.Enabled = false;
-                labelVirtualMonitorStatus.Text = "Creating virtual monitor...";
-                labelVirtualMonitorStatus.ForeColor = Color.Blue;
-
-                var config = dialog.GetConfiguration();
-                var virtualMonitor = await _virtualDisplayService.CreateVirtualMonitorAsync(
-                    config.Name, config.Width, config.Height);
-
-                if (virtualMonitor != null)
-                {
-                    labelVirtualMonitorStatus.Text = $"Virtual monitor created: {virtualMonitor.Name}";
-                    labelVirtualMonitorStatus.ForeColor = Color.Green;
-                    LoadAvailableMonitors();
-                    _logger.Log($"Virtual monitor created successfully: {virtualMonitor}");
-                }
-                else
-                {
-                    labelVirtualMonitorStatus.Text = "Failed to create virtual monitor";
-                    labelVirtualMonitorStatus.ForeColor = Color.Red;
-                }
-            }
+            // Temporarily disable virtual monitor creation via MainForm
+            MessageBox.Show("Virtual monitor creation is now available through the Multi-Stream form.", 
+                           "Virtual Monitor", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error creating virtual monitor: {ex.Message}", ex);
-            labelVirtualMonitorStatus.Text = "Error creating virtual monitor";
-            labelVirtualMonitorStatus.ForeColor = Color.Red;
-            
             MessageBox.Show($"Failed to create virtual monitor: {ex.Message}", 
                            "Virtual Monitor Error", 
                            MessageBoxButtons.OK, 
                            MessageBoxIcon.Error);
-        }
-        finally
-        {
-            buttonCreateVirtualMonitor.Enabled = true;
         }
     }
 
@@ -361,58 +333,17 @@ public partial class MainForm : Form
     {
         try
         {
-            var virtualMonitors = _virtualDisplayService.GetVirtualMonitors();
-            
-            if (virtualMonitors.Count == 0)
-            {
-                MessageBox.Show("No virtual monitors to remove.", 
-                               "No Virtual Monitors", 
-                               MessageBoxButtons.OK, 
-                               MessageBoxIcon.Information);
-                return;
-            }
-
-            using var dialog = new VirtualMonitorListDialog(virtualMonitors);
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                var selectedMonitor = dialog.GetSelectedMonitor();
-                if (selectedMonitor != null)
-                {
-                    buttonRemoveVirtualMonitor.Enabled = false;
-                    labelVirtualMonitorStatus.Text = "Removing virtual monitor...";
-                    labelVirtualMonitorStatus.ForeColor = Color.Blue;
-
-                    var success = await _virtualDisplayService.RemoveVirtualMonitorAsync(selectedMonitor.Id);
-                    
-                    if (success)
-                    {
-                        labelVirtualMonitorStatus.Text = "Virtual monitor removed";
-                        labelVirtualMonitorStatus.ForeColor = Color.Green;
-                        LoadAvailableMonitors();
-                        _logger.Log($"Virtual monitor removed: {selectedMonitor.Name}");
-                    }
-                    else
-                    {
-                        labelVirtualMonitorStatus.Text = "Failed to remove virtual monitor";
-                        labelVirtualMonitorStatus.ForeColor = Color.Red;
-                    }
-                }
-            }
+            // Temporarily disable virtual monitor removal via MainForm
+            MessageBox.Show("Virtual monitor management is now available through the Multi-Stream form.", 
+                           "Virtual Monitor", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error removing virtual monitor: {ex.Message}", ex);
-            labelVirtualMonitorStatus.Text = "Error removing virtual monitor";
-            labelVirtualMonitorStatus.ForeColor = Color.Red;
-            
             MessageBox.Show($"Failed to remove virtual monitor: {ex.Message}", 
                            "Virtual Monitor Error", 
                            MessageBoxButtons.OK, 
                            MessageBoxIcon.Error);
-        }
-        finally
-        {
-            buttonRemoveVirtualMonitor.Enabled = true;
         }
     }
 
