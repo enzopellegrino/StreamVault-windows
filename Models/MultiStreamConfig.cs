@@ -1,0 +1,36 @@
+namespace StreamVault.Models;
+
+/// <summary>
+/// Configuration for multi-monitor streaming setup
+/// </summary>
+public class MultiStreamConfig
+{
+    public List<StreamSession> StreamSessions { get; set; } = new();
+    public bool AutoStartChrome { get; set; } = true;
+    public string ChromePath { get; set; } = string.Empty;
+    public string DefaultChromeUrl { get; set; } = "https://www.google.com";
+    public int BaseSrtPort { get; set; } = 9999;
+    public string SrtHost { get; set; } = "127.0.0.1";
+}
+
+/// <summary>
+/// Individual streaming session for a specific monitor
+/// </summary>
+public class StreamSession
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public MonitorInfo Monitor { get; set; } = null!;
+    public string SrtUrl { get; set; } = string.Empty;
+    public int Fps { get; set; } = 30;
+    public int Bitrate { get; set; } = 2000;
+    public bool IsActive { get; set; } = false;
+    public bool ChromeLaunched { get; set; } = false;
+    public int ChromeProcessId { get; set; } = 0;
+    public DateTime StartTime { get; set; }
+    public string Status { get; set; } = "Ready";
+    
+    public override string ToString()
+    {
+        return $"{Monitor.DeviceName} → {SrtUrl} ({Status})";
+    }
+}
