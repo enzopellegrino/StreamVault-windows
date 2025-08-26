@@ -43,6 +43,7 @@ namespace StreamVault.Forms
             this.groupBoxStreams = new System.Windows.Forms.GroupBox();
             this.dataGridViewStreams = new System.Windows.Forms.DataGridView();
             this.groupBoxControl = new System.Windows.Forms.GroupBox();
+            this.buttonAddMonitor = new System.Windows.Forms.Button();
             this.buttonRefreshMonitors = new System.Windows.Forms.Button();
             this.buttonStartAll = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
@@ -217,6 +218,7 @@ namespace StreamVault.Forms
             // groupBoxControl
             // 
             this.groupBoxControl.Controls.Add(this.labelStatus);
+            this.groupBoxControl.Controls.Add(this.buttonAddMonitor);
             this.groupBoxControl.Controls.Add(this.buttonRefreshMonitors);
             this.groupBoxControl.Controls.Add(this.buttonStartAll);
             this.groupBoxControl.Location = new System.Drawing.Point(12, 600);  // Spostato da 470 a 600
@@ -228,13 +230,24 @@ namespace StreamVault.Forms
             // 
             // buttonRefreshMonitors
             // 
-            this.buttonRefreshMonitors.Location = new System.Drawing.Point(140, 25);
+            this.buttonRefreshMonitors.Location = new System.Drawing.Point(270, 25);
             this.buttonRefreshMonitors.Name = "buttonRefreshMonitors";
             this.buttonRefreshMonitors.Size = new System.Drawing.Size(120, 35);
-            this.buttonRefreshMonitors.TabIndex = 1;
+            this.buttonRefreshMonitors.TabIndex = 2;
             this.buttonRefreshMonitors.Text = "Refresh Monitors";
             this.buttonRefreshMonitors.UseVisualStyleBackColor = true;
             this.buttonRefreshMonitors.Click += new System.EventHandler(this.ButtonRefreshMonitors_Click);
+            // 
+            // buttonAddMonitor
+            // 
+            this.buttonAddMonitor.BackColor = System.Drawing.Color.LightBlue;
+            this.buttonAddMonitor.Location = new System.Drawing.Point(140, 25);
+            this.buttonAddMonitor.Name = "buttonAddMonitor";
+            this.buttonAddMonitor.Size = new System.Drawing.Size(120, 35);
+            this.buttonAddMonitor.TabIndex = 1;
+            this.buttonAddMonitor.Text = "Add Monitor";
+            this.buttonAddMonitor.UseVisualStyleBackColor = false;
+            this.buttonAddMonitor.Click += new System.EventHandler(this.ButtonAddMonitor_Click);
             // 
             // buttonStartAll
             // 
@@ -327,6 +340,7 @@ namespace StreamVault.Forms
         private System.Windows.Forms.DataGridView dataGridViewStreams;
         private System.Windows.Forms.GroupBox groupBoxControl;
         private System.Windows.Forms.Button buttonStartAll;
+        private System.Windows.Forms.Button buttonAddMonitor;
         private System.Windows.Forms.Button buttonRefreshMonitors;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelStreams;

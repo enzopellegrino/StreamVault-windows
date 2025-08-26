@@ -8,7 +8,7 @@ namespace StreamVault.Services;
 public class MultiStreamService
 {
     private readonly LoggingService _logger;
-    private readonly Dictionary<Guid, FFmpegService> _activeStreams = new();
+    private readonly Dictionary<string, FFmpegService> _activeStreams = new();
     private readonly ChromeManagementService _chromeService;
 
     public MultiStreamService(LoggingService logger)
@@ -231,9 +231,12 @@ public class MultiStreamService
             var session = new StreamSession
             {
                 Monitor = monitors[i],
+                MonitorId = monitors[i].DeviceName,
+                MonitorName = monitors[i].DeviceName,
                 SrtUrl = $"srt://{baseHost}:{basePort + i}",
                 Fps = 30,
-                Bitrate = 2000
+                Bitrate = 2000,
+                IsVirtual = false
             };
             
             sessions.Add(session);

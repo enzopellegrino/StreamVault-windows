@@ -253,6 +253,41 @@ public partial class MultiStreamForm : Form
         LoadMonitorsAndGenerateConfig();
     }
 
+    private void ButtonAddMonitor_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            // Create a new virtual monitor stream session
+            var newSession = new StreamSession
+            {
+                Id = Guid.NewGuid().ToString(),
+                MonitorId = $"Virtual_{DateTime.Now:HHmmss}",
+                MonitorName = $"Virtual Monitor {_config.StreamSessions.Count + 1}",
+                SrtUrl = $"srt://{textBoxBaseHost.Text}:{(int)numericBasePort.Value + _config.StreamSessions.Count}",
+                Status = "Ready",
+                IsVirtual = true
+            };
+
+            _config.StreamSessions.Add(newSession);
+            RefreshStreamGrid();
+            
+            _logger.Log($"Added virtual monitor: {newSession.MonitorName}");
+            
+            // Save configuration
+            if (!_isInitializing)
+            {
+                _saveTimer.Stop();
+                _saveTimer.Start();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error adding monitor: {ex.Message}", ex);
+            MessageBox.Show($"Error adding monitor: {ex.Message}", "Error", 
+                           MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private void ButtonGenerateUrls_Click(object sender, EventArgs e)
     {
         try

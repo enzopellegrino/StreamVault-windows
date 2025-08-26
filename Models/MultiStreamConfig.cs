@@ -18,12 +18,15 @@ public class MultiStreamConfig
 /// </summary>
 public class StreamSession
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public MonitorInfo Monitor { get; set; } = null!;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public MonitorInfo? Monitor { get; set; } = null;
+    public string MonitorId { get; set; } = string.Empty;
+    public string MonitorName { get; set; } = string.Empty;
     public string SrtUrl { get; set; } = string.Empty;
     public int Fps { get; set; } = 30;
     public int Bitrate { get; set; } = 2000;
     public bool IsActive { get; set; } = false;
+    public bool IsVirtual { get; set; } = false;
     public bool ChromeLaunched { get; set; } = false;
     public int ChromeProcessId { get; set; } = 0;
     public DateTime StartTime { get; set; }
@@ -31,6 +34,7 @@ public class StreamSession
     
     public override string ToString()
     {
-        return $"{Monitor.DeviceName} → {SrtUrl} ({Status})";
+        var displayName = IsVirtual ? MonitorName : Monitor?.DeviceName ?? MonitorName;
+        return $"{displayName} → {SrtUrl} ({Status})";
     }
 }
