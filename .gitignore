@@ -384,12 +384,12 @@ FodyWeavers.xsd
 # Build output directories
 publish-multistream/
 
-# Release Installers (Include in Git for Distribution)
+# Release Installers (Use GitHub Releases for Large Files)
 # ================================================
-# Keep these installer files in git for easy distribution
-!StreamVault_Professional_Setup_*.exe
-!StreamVault_Portable_v*.zip
-!StreamVault_Setup_v*.exe
+# Large installer files stored in GitHub Releases instead of repository
+StreamVault_Professional_Setup_*.exe
+StreamVault_Portable_v*.zip
+StreamVault_Setup_v*.exe
 
 # StreamVault-Latest generated files
 StreamVault-Latest/app/
@@ -399,9 +399,8 @@ StreamVault-Latest/*.deps.json
 StreamVault-Latest/*.pdb
 StreamVault-Latest/*.runtimeconfig.json
 
-# BUT: Keep release installers in git for distribution
-!StreamVault-Latest/StreamVault_Professional_Setup_*.exe
-!StreamVault-Latest/StreamVault_Portable_*.zip
+# BUT: Large installer files are stored in GitHub Releases instead
+# See: https://github.com/enzopellegrino/StreamVault-windows/releases
 
 # Localization folders
 StreamVault-Latest/cs/

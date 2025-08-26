@@ -4,16 +4,18 @@ StreamVault is a Windows desktop application that captures entire screen and str
 
 ## 🚀 Quick Download
 
-**Ready-to-use installers are available in this repository:**
+**Ready-to-use installers are available in GitHub Releases:**
 
-### Professional Installer (Recommended)
-- **File**: `StreamVault_Professional_Setup_v1.0.0.exe` (74MB)
+### 📦 [Download Latest Release](https://github.com/enzopellegrino/StreamVault-windows/releases/latest)
+
+#### Professional Installer (Recommended)
+- **File**: `StreamVault_Professional_Setup_v1.0.0.exe` (47MB)
 - **Features**: Full GUI installer with automatic FFmpeg download
 - **Installation**: Run as administrator, follow setup wizard
 - **Best for**: End users, production environments
 
-### Portable Version
-- **File**: `StreamVault_Portable_v1.0.0.zip` (168MB)
+#### Portable Version
+- **File**: `StreamVault_Portable_v1.0.0.zip` (67MB)
 - **Features**: Portable ZIP with batch installer
 - **Installation**: Extract and run `PORTABLE_INSTALLER.bat` as administrator
 - **Best for**: Testing, portable deployments
