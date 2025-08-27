@@ -49,6 +49,7 @@ namespace StreamVault.Forms
             textBoxDesktopName = new TextBox();
             label1 = new Label();
             buttonClose = new Button();
+            buttonTroubleshoot = new Button();
             groupBoxDriverStatus.SuspendLayout();
             groupBoxDesktops.SuspendLayout();
             groupBoxCreateDesktop.SuspendLayout();
@@ -271,11 +272,22 @@ namespace StreamVault.Forms
             buttonClose.UseVisualStyleBackColor = true;
             buttonClose.Click += ButtonClose_Click;
             // 
+            // buttonTroubleshoot
+            // 
+            buttonTroubleshoot.Location = new Point(400, 452);
+            buttonTroubleshoot.Name = "buttonTroubleshoot";
+            buttonTroubleshoot.Size = new Size(90, 23);
+            buttonTroubleshoot.TabIndex = 4;
+            buttonTroubleshoot.Text = "Troubleshoot";
+            buttonTroubleshoot.UseVisualStyleBackColor = true;
+            buttonTroubleshoot.Click += ButtonTroubleshoot_Click;
+            // 
             // VirtualDesktopManagerDialog
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(584, 487);
+            Controls.Add(buttonTroubleshoot);
             Controls.Add(buttonClose);
             Controls.Add(groupBoxCreateDesktop);
             Controls.Add(groupBoxDesktops);
@@ -320,5 +332,6 @@ namespace StreamVault.Forms
         private NumericUpDown numericHeight;
         private Button buttonCreateDesktop;
         private Button buttonClose;
+        private Button buttonTroubleshoot;
     }
 }

@@ -123,30 +123,67 @@ public class VirtualDesktopDriverService
                 return true;
             }
 
+            // Check if we're running as administrator
+            if (!IsRunningAsAdministrator())
+            {
+                _logger.LogError("Administrator privileges required for driver installation");
+                return false;
+            }
+
+            // Check Windows compatibility
+            if (!IsWindowsCompatible())
+            {
+                _logger.LogError("Windows version not compatible with virtual display drivers");
+                return false;
+            }
+
             // Download the driver
             var driverDownloaded = await DownloadIddDriverAsync();
             if (!driverDownloaded)
             {
+                _logger.LogError("Failed to download driver files");
                 return false;
             }
 
-            // Install the driver
-            var installSuccess = await InstallDriverAsync(_iddDriverPath);
+            // Check if test signing is enabled (required for unsigned drivers)
+            var testSigningEnabled = await CheckTestSigningAsync();
+            if (!testSigningEnabled)
+            {
+                _logger.Log("Warning: Test signing not enabled. Driver installation may fail.");
+                _logger.Log("To enable test signing, run as admin: bcdedit /set testsigning on");
+            }
+
+            // Install the driver with enhanced error handling
+            var installSuccess = await InstallDriverWithRetryAsync(_iddDriverPath);
             
             if (installSuccess)
             {
                 _logger.Log("IDD Sample Driver installed successfully");
-                return true;
+                
+                // Verify installation
+                await Task.Delay(2000); // Wait for driver to be recognized
+                if (await IsIddDriverInstalledAsync())
+                {
+                    _logger.Log("Driver installation verified successfully");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogError("Driver installation completed but verification failed");
+                    return false;
+                }
             }
             else
             {
                 _logger.LogError("Failed to install IDD Sample Driver");
+                await LogInstallationErrorsAsync();
                 return false;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error installing IDD driver: {ex.Message}", ex);
+            await LogInstallationErrorsAsync();
             return false;
         }
     }
@@ -445,6 +482,139 @@ IddSampleDriver.SVCDESC = ""StreamVault Virtual Display Driver""
         catch
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Check if Windows version is compatible with virtual display drivers
+    /// </summary>
+    private bool IsWindowsCompatible()
+    {
+        try
+        {
+            var version = Environment.OSVersion.Version;
+            
+            // Windows 10 version 1903 (build 18362) or later required
+            if (version.Major >= 10 && version.Build >= 18362)
+            {
+                _logger.Log($"Windows version compatible: {version}");
+                return true;
+            }
+            
+            _logger.LogError($"Windows version incompatible: {version}. Minimum required: Windows 10 build 18362");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error checking Windows compatibility: {ex.Message}", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Check if test signing is enabled
+    /// </summary>
+    private async Task<bool> CheckTestSigningAsync()
+    {
+        try
+        {
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "bcdedit",
+                Arguments = "",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(processInfo);
+            if (process == null) return false;
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            var testSigningEnabled = output.Contains("testsigning") && output.Contains("Yes");
+            _logger.Log($"Test signing enabled: {testSigningEnabled}");
+            
+            return testSigningEnabled;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error checking test signing: {ex.Message}", ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Install driver with retry mechanism
+    /// </summary>
+    private async Task<bool> InstallDriverWithRetryAsync(string driverPath)
+    {
+        const int maxRetries = 3;
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            _logger.Log($"Driver installation attempt {attempt}/{maxRetries}");
+            
+            var success = await InstallDriverAsync(driverPath);
+            if (success)
+            {
+                return true;
+            }
+            
+            if (attempt < maxRetries)
+            {
+                _logger.Log($"Installation attempt {attempt} failed, retrying in 2 seconds...");
+                await Task.Delay(2000);
+            }
+        }
+        
+        _logger.LogError($"Driver installation failed after {maxRetries} attempts");
+        return false;
+    }
+
+    /// <summary>
+    /// Log detailed installation errors from Windows Event Log
+    /// </summary>
+    private async Task LogInstallationErrorsAsync()
+    {
+        try
+        {
+            _logger.Log("Checking Windows Event Log for driver installation errors...");
+            
+            // Query Event Log for recent driver errors
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = "powershell",
+                Arguments = "-Command \"Get-WinEvent -FilterHashtable @{LogName='System'; Level=2,3; StartTime=(Get-Date).AddMinutes(-5)} | Where-Object {$_.LevelDisplayName -eq 'Error' -and ($_.Message -like '*driver*' -or $_.Message -like '*IDD*')} | Select-Object -First 5 | Format-Table TimeCreated, LevelDisplayName, Message -Wrap\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(processInfo);
+            if (process != null)
+            {
+                var output = await process.StandardOutput.ReadToEndAsync();
+                var errors = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (!string.IsNullOrEmpty(output))
+                {
+                    _logger.Log("Recent driver-related errors from Event Log:");
+                    _logger.Log(output);
+                }
+                
+                if (!string.IsNullOrEmpty(errors))
+                {
+                    _logger.LogError($"Error querying Event Log: {errors}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error checking Event Log: {ex.Message}", ex);
         }
     }
 

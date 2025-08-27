@@ -153,10 +153,18 @@ public partial class VirtualDesktopManagerDialog : Form
             }
             else
             {
+                var errorMessage = "Virtual display driver installation failed.\n\n" +
+                    "Common solutions:\n" +
+                    "• Ensure you're running as Administrator\n" +
+                    "• Enable test signing: bcdedit /set testsigning on\n" +
+                    "• Check Windows compatibility (Windows 10 1903+ or Windows 11)\n" +
+                    "• Restart computer and try again\n\n" +
+                    "Check the debug log for detailed error information.\n" +
+                    "See the Troubleshooting guide in the drivers folder for more help.";
+                
                 MessageBox.Show(
-                    "Driver installation failed. Please check the logs for more details.\n\n" +
-                    "Make sure you're running as administrator and try again.",
-                    "Installation Failed",
+                    errorMessage,
+                    "Driver Installation Failed",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 
@@ -337,5 +345,20 @@ public partial class VirtualDesktopManagerDialog : Form
     {
         LoadDriverStatus();
         LoadVirtualDesktops();
+    }
+
+    private void ButtonTroubleshoot_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using var dialog = new DriverTroubleshootingDialog(_logger, _driverService);
+            dialog.ShowDialog(this);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error opening troubleshooting dialog: {ex.Message}", ex);
+            MessageBox.Show($"Error opening troubleshooting dialog: {ex.Message}", "Error", 
+                           MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 }
