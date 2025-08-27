@@ -5,13 +5,14 @@
 ;--------------------------------
 ; Installer Configuration
 !define APP_NAME "StreamVault"
-!define PRODUCT_VERSION "1.2.0"
+!define APP_VERSION "1.3.0"
+!define PRODUCT_VERSION "1.3.0"
 !define APP_PUBLISHER "StreamVault Team"
-!define APP_URL "https://github.com/streamvault"
-!define APP_DESCRIPTION "Professional Multi-Monitor SRT Streaming Solution"
+!define APP_URL "https://github.com/enzopellegrino/StreamVault-windows"
+!define APP_DESCRIPTION "Professional Multi-Monitor SRT Streaming with Virtual Desktop Support"
 
 ; Installer file name
-!define INSTALLER_NAME "StreamVault_Setup_v${APP_VERSION}.exe"
+!define INSTALLER_NAME "StreamVault_Professional_Setup_v${APP_VERSION}.exe"
 
 ; Installation directory
 !define INSTALL_DIR "$PROGRAMFILES\${APP_NAME}"
@@ -43,7 +44,7 @@ SetCompressor /solid lzma
 SetCompressorDictSize 32
 
 ; Version Information
-VIProductVersion "1.0.0.0"
+VIProductVersion "1.3.0.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "CompanyName" "${APP_PUBLISHER}"
@@ -107,6 +108,12 @@ Section "!${APP_NAME} Core" SecCore
     
     ; Copy all application files from app directory
     File /r "app\*.*"
+    
+    ; Create drivers directory and install virtual desktop drivers
+    DetailPrint "Installing virtual desktop drivers..."
+    CreateDirectory "$INSTDIR\drivers"
+    SetOutPath "$INSTDIR\drivers"
+    File /r "..\drivers\*.*"
     
     ; Create uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -196,7 +203,7 @@ SectionEnd
 ; Section Descriptions
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${SecCore} "${APP_NAME} core application and runtime files. This component is required."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecCore} "${APP_NAME} core application, runtime files, and virtual desktop drivers (IddSampleDriver). This component is required."
     !insertmacro MUI_DESCRIPTION_TEXT ${SecFFmpeg} "Download and install FFmpeg for video processing. Recommended for offline installation."
     !insertmacro MUI_DESCRIPTION_TEXT ${SecDesktop} "Create a desktop shortcut for easy access to ${APP_NAME}."
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} "Create Start Menu shortcuts for ${APP_NAME}."
@@ -260,8 +267,9 @@ Section "Uninstall"
     Delete "$SMPROGRAMS\${APP_NAME}\*.*"
     RMDir "$SMPROGRAMS\${APP_NAME}"
     
-    ; Remove application files
+    ; Remove application files and directories
     RMDir /r "$INSTDIR\ffmpeg"
+    RMDir /r "$INSTDIR\drivers"
     Delete "$INSTDIR\*.*"
     
     ; Remove application directories
