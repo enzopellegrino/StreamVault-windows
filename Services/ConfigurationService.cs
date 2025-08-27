@@ -54,6 +54,14 @@ public class ConfigurationService
     {
         try
         {
+            // Ensure directory exists
+            var directory = Path.GetDirectoryName(_configFilePath);
+            if (directory != null && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+                _logger.Log($"Created configuration directory: {directory}");
+            }
+
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -61,25 +69,47 @@ public class ConfigurationService
             };
 
             var jsonContent = JsonSerializer.Serialize(config, options);
+            
+            // Log some details about what we're saving
+            _logger.Log($"Saving configuration with {config.StreamSessions.Count} stream sessions and {config.VirtualMonitors.Count} virtual monitors");
+            _logger.Log($"Configuration file: {_configFilePath}");
+            
             await File.WriteAllTextAsync(_configFilePath, jsonContent);
             
-            _logger.Log($"Configuration saved to {_configFilePath}");
+            _logger.Log($"Configuration saved successfully to {_configFilePath}");
+            
+            // Verify the file was written
+            if (File.Exists(_configFilePath))
+            {
+                var fileInfo = new FileInfo(_configFilePath);
+                _logger.Log($"Configuration file size: {fileInfo.Length} bytes");
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError($"Error saving configuration: {ex.Message}", ex);
+            throw; // Re-throw so the caller knows it failed
         }
     }
 
     private MultiStreamConfig CreateDefaultConfiguration()
     {
+        var defaultServers = new List<SrtServerInfo>
+        {
+            SrtServerInfo.CreateDefault(),
+            SrtServerInfo.CreateOBSPreset(),
+            SrtServerInfo.CreateVLCPreset()
+        };
+
         return new MultiStreamConfig
         {
             SrtHost = "127.0.0.1",
             BaseSrtPort = 9999,
             DefaultChromeUrl = "https://www.google.com",
             AutoStartChrome = true,
-            StreamSessions = new List<StreamSession>()
+            StreamSessions = new List<StreamSession>(),
+            SrtServers = defaultServers,
+            SelectedSrtServerId = defaultServers.First().Id
         };
     }
 

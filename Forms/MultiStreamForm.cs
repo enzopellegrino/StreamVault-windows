@@ -40,6 +40,9 @@ public partial class MultiStreamForm : Form
         // Subscribe to UI change events after initialization
         SubscribeToUIEvents();
         _isInitializing = false;  // Fine dell'inizializzazione
+        
+        // Load SRT servers
+        LoadSrtServers();
     }
 
     private async void InitializeUI()
@@ -487,6 +490,7 @@ public partial class MultiStreamForm : Form
         numericBasePort.ValueChanged += OnConfigurationChanged;
         textBoxChromeUrl.TextChanged += OnConfigurationChanged;
         checkBoxAutoChrome.CheckedChanged += OnConfigurationChanged;
+        comboBoxSrtServers.SelectedIndexChanged += OnConfigurationChanged;
     }
 
     private async void OnConfigurationChanged(object? sender, EventArgs e)
@@ -519,4 +523,138 @@ public partial class MultiStreamForm : Form
                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
+
+    #region SRT Server Management
+
+    private void LoadSrtServers()
+    {
+        try
+        {
+            comboBoxSrtServers.Items.Clear();
+            
+            // Ensure we have some default servers
+            if (!_config.SrtServers.Any())
+            {
+                _config.SrtServers.AddRange(new[]
+                {
+                    SrtServerInfo.CreateDefault(),
+                    SrtServerInfo.CreateOBSPreset(),
+                    SrtServerInfo.CreateVLCPreset()
+                });
+                _config.SelectedSrtServerId = _config.SrtServers.First().Id;
+            }
+            
+            // Add servers to combo box
+            foreach (var server in _config.SrtServers.Where(s => s.IsActive))
+            {
+                comboBoxSrtServers.Items.Add(server);
+            }
+            
+            // Select the current server
+            if (!string.IsNullOrEmpty(_config.SelectedSrtServerId))
+            {
+                var selectedServer = _config.SrtServers.FirstOrDefault(s => s.Id == _config.SelectedSrtServerId);
+                if (selectedServer != null)
+                {
+                    comboBoxSrtServers.SelectedItem = selectedServer;
+                }
+            }
+            
+            // If nothing selected, select the first one
+            if (comboBoxSrtServers.SelectedIndex < 0 && comboBoxSrtServers.Items.Count > 0)
+            {
+                comboBoxSrtServers.SelectedIndex = 0;
+            }
+            
+            _logger.Log($"Loaded {_config.SrtServers.Count} SRT servers, {comboBoxSrtServers.Items.Count} active");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error loading SRT servers: {ex.Message}", ex);
+        }
+    }
+
+    private void ComboBoxSrtServers_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (comboBoxSrtServers.SelectedItem is SrtServerInfo selectedServer)
+        {
+            _config.SelectedSrtServerId = selectedServer.Id;
+            selectedServer.LastUsed = DateTime.Now;
+            
+            // Update base host and port to match selected server
+            textBoxBaseHost.Text = selectedServer.Host;
+            numericBasePort.Value = selectedServer.Port;
+            
+            _logger.Log($"Selected SRT server: {selectedServer.DisplayText}");
+            
+            // Trigger configuration save
+            if (!_isInitializing)
+            {
+                _saveTimer.Stop();
+                _saveTimer.Start();
+            }
+        }
+    }
+
+    private void ButtonManageSrtServers_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using var dialog = new SrtServerManagerDialog(_config.SrtServers, _logger);
+            
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                _config.SrtServers = new List<SrtServerInfo>(dialog.Servers);
+                
+                // Ensure selected server is still valid
+                if (!_config.SrtServers.Any(s => s.Id == _config.SelectedSrtServerId))
+                {
+                    var firstActiveServer = _config.SrtServers.FirstOrDefault(s => s.IsActive);
+                    _config.SelectedSrtServerId = firstActiveServer?.Id ?? string.Empty;
+                }
+                
+                LoadSrtServers();
+                
+                // Save changes
+                if (!_isInitializing)
+                {
+                    _saveTimer.Stop();
+                    _saveTimer.Start();
+                }
+                
+                _logger.Log($"SRT servers updated: {_config.SrtServers.Count} total servers");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error managing SRT servers: {ex.Message}", ex);
+            MessageBox.Show($"Error managing SRT servers: {ex.Message}", 
+                           "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private SrtServerInfo? GetSelectedSrtServer()
+    {
+        return comboBoxSrtServers.SelectedItem as SrtServerInfo;
+    }
+
+    private void ButtonVirtualDesktops_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            using var dialog = new VirtualDesktopManagerDialog(_logger);
+            dialog.ShowDialog(this);
+            
+            // Refresh monitors after managing virtual desktops
+            LoadMonitorsAndGenerateConfig();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error opening virtual desktop manager: {ex.Message}", ex);
+            MessageBox.Show($"Error opening virtual desktop manager: {ex.Message}", 
+                           "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    #endregion
 }

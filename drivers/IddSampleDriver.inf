@@ -1,0 +1,45 @@
+[Version]
+Signature="$Windows NT$"
+Class=Display
+ClassGuid={4d36e968-e325-11ce-bfc1-08002be10318}
+Provider=%Provider%
+DriverVer=01/01/2024,1.0.0.0
+CatalogFile=IddSampleDriver.cat
+
+[Manufacturer]
+%Provider%=Models,NTamd64
+
+[Models.NTamd64]
+%DeviceDesc%=IddSampleDriver_Install, Root\IddSampleDriver
+
+[IddSampleDriver_Install]
+CopyFiles=IddSampleDriver_CopyFiles
+
+[IddSampleDriver_CopyFiles]
+IddSampleDriver.dll
+
+[SourceDisksNames]
+1=%DiskName%,,,
+
+[SourceDisksFiles]
+IddSampleDriver.dll=1
+
+[DestinationDirs]
+DefaultDestDir=13
+IddSampleDriver_CopyFiles=13
+
+[IddSampleDriver_Install.Services]
+AddService=IddSampleDriver, 0x00000002, IddSampleDriver_ServiceInstall
+
+[IddSampleDriver_ServiceInstall]
+DisplayName=%ServiceDesc%
+ServiceType=1
+StartType=3
+ErrorControl=1
+ServiceBinary=%13%\IddSampleDriver.dll
+
+[Strings]
+Provider="StreamVault"
+DeviceDesc="IDD Sample Driver for Virtual Displays"
+ServiceDesc="IDD Sample Driver Service"
+DiskName="IDD Sample Driver Installation Disk"

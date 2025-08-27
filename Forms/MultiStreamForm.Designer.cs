@@ -40,6 +40,10 @@ namespace StreamVault.Forms
             this.labelBasePort = new System.Windows.Forms.Label();
             this.textBoxBaseHost = new System.Windows.Forms.TextBox();
             this.labelBaseHost = new System.Windows.Forms.Label();
+            this.comboBoxSrtServers = new System.Windows.Forms.ComboBox();
+            this.labelSrtServer = new System.Windows.Forms.Label();
+            this.buttonManageSrtServers = new System.Windows.Forms.Button();
+            this.buttonVirtualDesktops = new System.Windows.Forms.Button();
             this.groupBoxStreams = new System.Windows.Forms.GroupBox();
             this.dataGridViewStreams = new System.Windows.Forms.DataGridView();
             this.groupBoxControl = new System.Windows.Forms.GroupBox();
@@ -60,6 +64,10 @@ namespace StreamVault.Forms
             // 
             // groupBoxConfiguration
             // 
+            this.groupBoxConfiguration.Controls.Add(this.buttonVirtualDesktops);
+            this.groupBoxConfiguration.Controls.Add(this.buttonManageSrtServers);
+            this.groupBoxConfiguration.Controls.Add(this.comboBoxSrtServers);
+            this.groupBoxConfiguration.Controls.Add(this.labelSrtServer);
             this.groupBoxConfiguration.Controls.Add(this.buttonSaveConfig);
             this.groupBoxConfiguration.Controls.Add(this.buttonTestChrome);
             this.groupBoxConfiguration.Controls.Add(this.buttonGenerateUrls);
@@ -190,6 +198,45 @@ namespace StreamVault.Forms
             this.labelBaseHost.Size = new System.Drawing.Size(63, 15);
             this.labelBaseHost.TabIndex = 0;
             this.labelBaseHost.Text = "Base Host:";
+            // 
+            // labelSrtServer
+            // 
+            this.labelSrtServer.AutoSize = true;
+            this.labelSrtServer.Location = new System.Drawing.Point(420, 35);
+            this.labelSrtServer.Name = "labelSrtServer";
+            this.labelSrtServer.Size = new System.Drawing.Size(71, 15);
+            this.labelSrtServer.TabIndex = 20;
+            this.labelSrtServer.Text = "SRT Server:";
+            // 
+            // comboBoxSrtServers
+            // 
+            this.comboBoxSrtServers.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSrtServers.FormattingEnabled = true;
+            this.comboBoxSrtServers.Location = new System.Drawing.Point(500, 32);
+            this.comboBoxSrtServers.Name = "comboBoxSrtServers";
+            this.comboBoxSrtServers.Size = new System.Drawing.Size(240, 23);
+            this.comboBoxSrtServers.TabIndex = 21;
+            this.comboBoxSrtServers.SelectedIndexChanged += new System.EventHandler(this.ComboBoxSrtServers_SelectedIndexChanged);
+            // 
+            // buttonManageSrtServers
+            // 
+            this.buttonManageSrtServers.Location = new System.Drawing.Point(750, 32);
+            this.buttonManageSrtServers.Name = "buttonManageSrtServers";
+            this.buttonManageSrtServers.Size = new System.Drawing.Size(100, 23);
+            this.buttonManageSrtServers.TabIndex = 22;
+            this.buttonManageSrtServers.Text = "Manage...";
+            this.buttonManageSrtServers.UseVisualStyleBackColor = true;
+            this.buttonManageSrtServers.Click += new System.EventHandler(this.ButtonManageSrtServers_Click);
+            // 
+            // buttonVirtualDesktops
+            // 
+            this.buttonVirtualDesktops.Location = new System.Drawing.Point(860, 32);
+            this.buttonVirtualDesktops.Name = "buttonVirtualDesktops";
+            this.buttonVirtualDesktops.Size = new System.Drawing.Size(120, 23);
+            this.buttonVirtualDesktops.TabIndex = 23;
+            this.buttonVirtualDesktops.Text = "Virtual Desktops...";
+            this.buttonVirtualDesktops.UseVisualStyleBackColor = true;
+            this.buttonVirtualDesktops.Click += new System.EventHandler(this.ButtonVirtualDesktops_Click);
             // 
             // groupBoxStreams
             // 
@@ -336,6 +383,10 @@ namespace StreamVault.Forms
         private System.Windows.Forms.Button buttonTestChrome;
         private System.Windows.Forms.Button buttonSaveConfig;
         private System.Windows.Forms.Button buttonDebugFFmpeg;
+        private System.Windows.Forms.ComboBox comboBoxSrtServers;
+        private System.Windows.Forms.Label labelSrtServer;
+        private System.Windows.Forms.Button buttonManageSrtServers;
+        private System.Windows.Forms.Button buttonVirtualDesktops;
         private System.Windows.Forms.GroupBox groupBoxStreams;
         private System.Windows.Forms.DataGridView dataGridViewStreams;
         private System.Windows.Forms.GroupBox groupBoxControl;

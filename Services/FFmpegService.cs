@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using StreamVault.Models;
 
 namespace StreamVault.Services;
 
@@ -52,6 +53,105 @@ public class FFmpegService
     /// Check if FFmpeg is available and running
     /// </summary>
     public bool IsRunning => _isRunning && _ffmpegProcess != null && !_ffmpegProcess.HasExited;
+
+    /// <summary>
+    /// Start screen capture and streaming with FFmpeg using MonitorInfo
+    /// </summary>
+    public async Task<bool> StartScreenCaptureAsync(MonitorInfo monitor, string srtUrl, int fps = 30, int bitrate = 2000)
+    {
+        try
+        {
+            if (IsRunning)
+            {
+                _logger.LogWarning("FFmpeg is already running");
+                return false;
+            }
+
+            if (!IsFFmpegAvailable)
+            {
+                var message = "FFmpeg executable not found. Please install FFmpeg:\n\n" +
+                             "Option 1: Download from https://ffmpeg.org/download.html\n" +
+                             "Option 2: Install with Chocolatey: choco install ffmpeg\n" +
+                             "Option 3: Install with Scoop: scoop install ffmpeg\n" +
+                             "Option 4: Copy ffmpeg.exe to application directory\n\n" +
+                             "After installation, restart the application.";
+                             
+                throw new InvalidOperationException(message);
+            }
+
+            var arguments = BuildFFmpegArgumentsForMonitor(monitor, srtUrl, fps, bitrate);
+            
+            _logger.Log($"Starting FFmpeg for monitor {monitor.FriendlyName} with arguments: {arguments}");
+
+            _ffmpegProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = _ffmpegPath,
+                    Arguments = arguments,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                },
+                EnableRaisingEvents = true
+            };
+
+            _ffmpegProcess.OutputDataReceived += OnOutputDataReceived;
+            _ffmpegProcess.ErrorDataReceived += OnErrorDataReceived;
+            _ffmpegProcess.Exited += OnProcessExited;
+
+            if (!_ffmpegProcess.Start())
+            {
+                throw new InvalidOperationException("Failed to start FFmpeg process");
+            }
+
+            _ffmpegProcess.BeginOutputReadLine();
+            _ffmpegProcess.BeginErrorReadLine();
+
+            // Give FFmpeg a moment to initialize
+            await Task.Delay(1000);
+
+            if (_ffmpegProcess.HasExited)
+            {
+                throw new InvalidOperationException($"FFmpeg process exited immediately with code {_ffmpegProcess.ExitCode}");
+            }
+
+            _isRunning = true;
+            ProcessStarted?.Invoke(this, EventArgs.Empty);
+            
+            _logger.Log($"FFmpeg started successfully for monitor {monitor.FriendlyName}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error starting FFmpeg: {ex.Message}", ex);
+            
+            if (_ffmpegProcess != null)
+            {
+                try
+                {
+                    if (!_ffmpegProcess.HasExited)
+                    {
+                        _ffmpegProcess.Kill();
+                    }
+                }
+                catch (Exception killEx)
+                {
+                    _logger.LogError($"Error killing FFmpeg process: {killEx.Message}", killEx);
+                }
+                finally
+                {
+                    _ffmpegProcess?.Dispose();
+                    _ffmpegProcess = null;
+                }
+            }
+
+            _isRunning = false;
+            throw;
+        }
+    }
 
     /// <summary>
     /// Start screen capture and streaming with FFmpeg
@@ -349,6 +449,60 @@ public class FFmpegService
     }
 
     /// <summary>
+    /// Build FFmpeg command line arguments for specific monitor
+    /// </summary>
+    private string BuildFFmpegArgumentsForMonitor(MonitorInfo monitor, string srtUrl, int fps, int bitrate)
+    {
+        var args = new StringBuilder();
+
+        // Input settings (screen capture con offset per monitor specifico)
+        args.Append($"-f gdigrab ");
+        args.Append($"-framerate {fps} ");
+        args.Append($"-offset_x {monitor.Left} ");
+        args.Append($"-offset_y {monitor.Top} ");
+        args.Append($"-video_size {monitor.Width}x{monitor.Height} ");
+        args.Append($"-i desktop ");
+
+        // Video encoding settings ottimizzati per SRT
+        args.Append($"-c:v libx264 ");
+        args.Append($"-preset ultrafast ");
+        args.Append($"-tune zerolatency ");
+        args.Append($"-b:v {bitrate}k ");
+        args.Append($"-maxrate {bitrate * 1.5}k ");
+        args.Append($"-bufsize {bitrate * 2}k ");
+        args.Append($"-pix_fmt yuv420p ");
+        args.Append($"-g {fps} "); // GOP size = FPS per 1 secondo
+        args.Append($"-keyint_min {fps / 2} ");
+        args.Append($"-sc_threshold 0 ");
+        args.Append($"-fflags +genpts ");
+        args.Append($"-avoid_negative_ts make_zero ");
+
+        // SRT output settings specifici
+        args.Append($"-f mpegts ");
+        
+        // Aggiungi parametri SRT se non già presenti nell'URL
+        if (!srtUrl.Contains("?"))
+        {
+            args.Append($"\"{srtUrl}?mode=caller&latency=20&maxbw=0\" ");
+        }
+        else
+        {
+            args.Append($"\"{srtUrl}\" ");
+        }
+
+        // Additional flags
+        args.Append($"-y "); // Overwrite output
+
+        var command = args.ToString().Trim();
+        _logger.Log($"Built FFmpeg command for monitor {monitor.FriendlyName}: ffmpeg {command}");
+        _logger.Log($"Monitor bounds: {monitor.Left},{monitor.Top} {monitor.Width}x{monitor.Height}");
+        _logger.Log($"SRT URL: {srtUrl}");
+        _logger.Log($"Settings: FPS={fps}, Bitrate={bitrate}k");
+        
+        return command;
+    }
+
+    /// <summary>
     /// Build FFmpeg command line arguments
     /// </summary>
     private string BuildFFmpegArguments(string monitorDevice, string srtUrl, int fps, int bitrate)
@@ -356,25 +510,48 @@ public class FFmpegService
         var args = new StringBuilder();
 
         // Input settings (screen capture)
-        args.Append($"-f gdigrab ");
-        args.Append($"-framerate {fps} ");
-        args.Append($"-i \"{monitorDevice}\" ");
+        // Per gdigrab, monitorDevice dovrebbe essere "desktop" o coordinate specifiche
+        if (monitorDevice.Contains("Monitor"))
+        {
+            // Se è un monitor specifico, usiamo desktop con offset
+            args.Append($"-f gdigrab ");
+            args.Append($"-framerate {fps} ");
+            args.Append($"-i desktop ");
+        }
+        else
+        {
+            // Altrimenti usiamo il device specificato
+            args.Append($"-f gdigrab ");
+            args.Append($"-framerate {fps} ");
+            args.Append($"-i \"{monitorDevice}\" ");
+        }
 
-        // Video encoding settings
+        // Video encoding settings ottimizzati per SRT
         args.Append($"-c:v libx264 ");
         args.Append($"-preset ultrafast ");
         args.Append($"-tune zerolatency ");
         args.Append($"-b:v {bitrate}k ");
-        args.Append($"-maxrate {bitrate * 2}k ");
-        args.Append($"-bufsize {bitrate * 4}k ");
+        args.Append($"-maxrate {bitrate * 1.5}k ");
+        args.Append($"-bufsize {bitrate * 2}k ");
         args.Append($"-pix_fmt yuv420p ");
-        args.Append($"-g {fps * 2} "); // GOP size
-        args.Append($"-keyint_min {fps} ");
+        args.Append($"-g {fps} "); // GOP size = FPS per 1 secondo
+        args.Append($"-keyint_min {fps / 2} ");
         args.Append($"-sc_threshold 0 ");
+        args.Append($"-fflags +genpts ");
+        args.Append($"-avoid_negative_ts make_zero ");
 
-        // SRT output settings
+        // SRT output settings specifici
         args.Append($"-f mpegts ");
-        args.Append($"\"{srtUrl}\" ");
+        
+        // Aggiungi parametri SRT se non già presenti nell'URL
+        if (!srtUrl.Contains("?"))
+        {
+            args.Append($"\"{srtUrl}?mode=caller&latency=20&maxbw=0\" ");
+        }
+        else
+        {
+            args.Append($"\"{srtUrl}\" ");
+        }
 
         // Additional flags
         args.Append($"-y "); // Overwrite output

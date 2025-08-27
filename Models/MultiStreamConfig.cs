@@ -7,6 +7,8 @@ public class MultiStreamConfig
 {
     public List<StreamSession> StreamSessions { get; set; } = new();
     public List<VirtualMonitorInfo> VirtualMonitors { get; set; } = new();
+    public List<SrtServerInfo> SrtServers { get; set; } = new();
+    public string SelectedSrtServerId { get; set; } = string.Empty;
     public bool AutoStartChrome { get; set; } = true;
     public string ChromePath { get; set; } = string.Empty;
     public string DefaultChromeUrl { get; set; } = "https://www.google.com";

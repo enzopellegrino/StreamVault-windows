@@ -1,26 +1,64 @@
-# StreamVault - Screen Capture to SRT Streaming
+# 🖥️ StreamVault v1.3.0 - Professional Screen Capture & SRT Streaming
 
-StreamVault is a Windows desktop application that captures entire screen and streams it via SRT (Secure Reliable Transport) protocol using FFmpeg.
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/enzopellegrino/StreamVault-windows/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-lightgrey.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-8.0-purple.svg)]()
 
-## 🚀 Quick Download
+## 🆕 Novità v1.3.0 - Virtual Desktop Support
 
-**Ready-to-use installers are available in GitHub Releases:**
+**Creazione di Desktop Virtuali**: StreamVault ora include supporto completo per la creazione di desktop virtuali utilizzando driver integrati:
 
-### 📦 [Download Latest Release](https://github.com/enzopellegrino/StreamVault-windows/releases/latest)
+### 🖥️ Virtual Desktop Features
+- **Driver IddSampleDriver integrato** per la creazione di display virtuali
+- **Gestione automatica dei driver** con installazione guidata
+- **Desktop virtuali personalizzabili** (risoluzione, frequenza di aggiornamento, colore)
+- **Interfaccia di gestione** con preview e controllo completo
+- **Integrazione seamless** con il sistema di streaming esistente
 
-#### Professional Installer (Recommended)
-- **File**: `StreamVault_Professional_Setup_v1.0.0.exe` (47MB)
-- **Features**: Full GUI installer with automatic FFmpeg download
-- **Installation**: Run as administrator, follow setup wizard
-- **Best for**: End users, production environments
+### 🔧 Gestione Driver
+- **Verifica automatica** dei privilegi amministratore
+- **Installazione driver** tramite Windows PnPUtil
+- **Supporto per IddSampleDriver** (incluso nel pacchetto)
+- **Supporto futuro** per Spacedesk e altri driver
+- **Rimozione sicura** e gestione degli errori
 
-#### Portable Version
-- **File**: `StreamVault_Portable_v1.0.0.zip` (67MB)
-- **Features**: Portable ZIP with batch installer
-- **Installation**: Extract and run `PORTABLE_INSTALLER.bat` as administrator
-- **Best for**: Testing, portable deployments
+---
 
-📋 **See [INSTALLATION_INSTRUCTIONS.md](INSTALLATION_INSTRUCTIONS.md) for detailed installation guide**
+## 🆕 Changelog v1.3.0
+
+### ✨ Nuove Funzionalità
+- **Virtual Desktop Support**: Integrazione completa driver IddSampleDriver
+- **Driver Manager**: Interfaccia per gestione driver virtual display
+- **Desktop Creator**: Creazione desktop virtuali personalizzati
+- **Enhanced Security**: Gestione privilegi amministratore migliorata
+
+### 🔧 Miglioramenti
+- **Driver Integration**: Supporto automatico per driver virtual display
+- **UI Enhancement**: Nuove interfacce per gestione desktop virtuali
+- **Error Handling**: Gestione errori migliorata per driver operations
+- **Documentation**: Documentazione estesa per virtual desktop features
+
+### 🐛 Bug Fix
+- **Driver Conflicts**: Risolti conflitti tra classi VirtualDesktopInfo
+- **Installation Issues**: Migliorata gestione installazione driver
+- **UI Responsiveness**: Migliorata reattività interfaccia durante operazioni driver
+
+---
+
+## 🔮 Roadmap Future
+
+### 🚀 Prossime Versioni
+- **v1.4.0**: Supporto Spacedesk driver integrato
+- **v1.5.0**: Audio capture e streaming
+- **v1.6.0**: Remote control e API REST
+- **v2.0.0**: Cloud streaming e gestione remota
+
+### 💡 Funzionalità in Valutazione
+- **NDI Support**: Integrazione NewTek NDI protocol
+- **RTMP Streaming**: Supporto diretto per RTMP (YouTube, Twitch)
+- **AI Enhancement**: Upscaling e miglioramento qualità AI-powered
+- **Mobile App**: Controllo remoto tramite app mobile
 
 ---
 
