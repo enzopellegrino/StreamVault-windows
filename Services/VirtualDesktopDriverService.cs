@@ -486,6 +486,14 @@ IddSampleDriver.SVCDESC = ""StreamVault Virtual Display Driver""
     }
 
     /// <summary>
+    /// Check if Windows version is compatible with virtual display drivers (async version)
+    /// </summary>
+    public async Task<bool> IsWindowsCompatibleAsync()
+    {
+        return await Task.FromResult(IsWindowsCompatible());
+    }
+
+    /// <summary>
     /// Check if Windows version is compatible with virtual display drivers
     /// </summary>
     private bool IsWindowsCompatible()
@@ -512,9 +520,9 @@ IddSampleDriver.SVCDESC = ""StreamVault Virtual Display Driver""
     }
 
     /// <summary>
-    /// Check if test signing is enabled
+    /// Check if test signing is enabled (public version for UI)
     /// </summary>
-    private async Task<bool> CheckTestSigningAsync()
+    public async Task<bool> CheckTestSigningAsync()
     {
         try
         {

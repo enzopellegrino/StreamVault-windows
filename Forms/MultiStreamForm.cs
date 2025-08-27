@@ -13,6 +13,7 @@ public partial class MultiStreamForm : Form
     private bool _isStreaming = false;
     private bool _isInitializing = true;  // Flag per evitare salvataggi durante l'inizializzazione
     private System.Windows.Forms.Timer _saveTimer;  // Timer per ritardare il salvataggio
+    private System.Windows.Forms.Timer _refreshTimer;  // Timer per aggiornare la UI
 
     public MultiStreamForm()
     {
@@ -28,6 +29,17 @@ public partial class MultiStreamForm : Form
             _saveTimer.Stop();
             await SaveConfigurationAsync();
         };
+        
+        // Initialize refresh timer for real-time updates
+        _refreshTimer = new System.Windows.Forms.Timer();
+        _refreshTimer.Interval = 1000; // Update every second
+        _refreshTimer.Tick += (s, e) => {
+            if (!_isInitializing && _config.StreamSessions.Any(session => session.IsActive))
+            {
+                UpdateGridDisplayData();
+            }
+        };
+        _refreshTimer.Start();
         
         // Subscribe to events
         _multiStreamService.StreamStarted += OnStreamStarted;
@@ -45,10 +57,19 @@ public partial class MultiStreamForm : Form
         LoadSrtServers();
     }
 
+    protected override void OnFormClosed(FormClosedEventArgs e)
+    {
+        _refreshTimer?.Stop();
+        _refreshTimer?.Dispose();
+        _saveTimer?.Stop();
+        _saveTimer?.Dispose();
+        base.OnFormClosed(e);
+    }
+
     private async void InitializeUI()
     {
-        this.Text = "StreamVault - Multi-Monitor Streaming";
-        this.Size = new Size(1200, 800);  // Aumentato da 800x600 a 1200x800
+        this.Text = "StreamVault - Screen Capture & Streaming";
+        this.Size = new Size(1210, 720);  // Dimensioni finestra principale
         this.StartPosition = FormStartPosition.CenterScreen;
         this.MinimumSize = new Size(1000, 700);  // Dimensione minima
         
@@ -143,16 +164,356 @@ public partial class MultiStreamForm : Form
 
     private void RefreshStreamGrid()
     {
-        dataGridViewStreams.DataSource = null;
-        dataGridViewStreams.DataSource = _config.StreamSessions;
+        try
+        {
+            dataGridViewStreams.DataSource = null;
+            
+            // Setup custom DataGridView with action columns
+            dataGridViewStreams.Columns.Clear();
+            dataGridViewStreams.AutoGenerateColumns = false;
+            
+            // Add Monitor Name column
+            var monitorColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "MonitorName",
+                HeaderText = "Monitor",
+                DataPropertyName = "MonitorName",
+                Width = 120,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(monitorColumn);
+            
+            // Add SRT URL column
+            var srtColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "SrtUrl",
+                HeaderText = "SRT URL",
+                DataPropertyName = "SrtUrl",
+                Width = 180,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(srtColumn);
+            
+            // Add Status column with color coding
+            var statusColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "Status",
+                HeaderText = "Status",
+                DataPropertyName = "Status",
+                Width = 100,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(statusColumn);
+            
+            // Add Start/Stop Action column
+            var actionColumn = new DataGridViewButtonColumn
+            {
+                Name = "Action",
+                HeaderText = "Action",
+                Text = "Start",
+                UseColumnTextForButtonValue = false,
+                Width = 80
+            };
+            dataGridViewStreams.Columns.Add(actionColumn);
+            
+            // Add Duration column
+            var durationColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "Duration",
+                HeaderText = "Duration",
+                Width = 80,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(durationColumn);
+            
+            // Add Bitrate column
+            var bitrateColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "Bitrate",
+                HeaderText = "Bitrate (kbps)",
+                DataPropertyName = "Bitrate",
+                Width = 100,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(bitrateColumn);
+            
+            // Add FPS column
+            var fpsColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "Fps",
+                HeaderText = "FPS",
+                DataPropertyName = "Fps",
+                Width = 60,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(fpsColumn);
+            
+            // Add Is Virtual column
+            var virtualColumn = new DataGridViewCheckBoxColumn
+            {
+                Name = "IsVirtual",
+                HeaderText = "Virtual",
+                DataPropertyName = "IsVirtual",
+                Width = 70,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(virtualColumn);
+            
+            // Add Chrome Status column
+            var chromeColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "ChromeStatus",
+                HeaderText = "Chrome",
+                Width = 80,
+                ReadOnly = true
+            };
+            dataGridViewStreams.Columns.Add(chromeColumn);
+            
+            // Bind data
+            dataGridViewStreams.DataSource = _config.StreamSessions;
+            
+            // Update action button text and duration
+            UpdateGridDisplayData();
+            
+            // Handle button clicks
+            dataGridViewStreams.CellClick -= DataGridViewStreams_CellClick;
+            dataGridViewStreams.CellClick += DataGridViewStreams_CellClick;
+            
+            // Handle cell formatting for colors
+            dataGridViewStreams.CellFormatting -= DataGridViewStreams_CellFormatting;
+            dataGridViewStreams.CellFormatting += DataGridViewStreams_CellFormatting;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error refreshing stream grid: {ex.Message}", ex);
+        }
+    }
+
+    private void UpdateGridDisplayData()
+    {
+        for (int i = 0; i < dataGridViewStreams.Rows.Count && i < _config.StreamSessions.Count; i++)
+        {
+            var session = _config.StreamSessions[i];
+            var row = dataGridViewStreams.Rows[i];
+            
+            // Update action button text
+            row.Cells["Action"].Value = session.IsActive ? "Stop" : "Start";
+            
+            // Update duration
+            if (session.IsActive && session.StartTime != DateTime.MinValue)
+            {
+                var duration = DateTime.Now - session.StartTime;
+                row.Cells["Duration"].Value = $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+            }
+            else
+            {
+                row.Cells["Duration"].Value = "--:--:--";
+            }
+            
+            // Update Chrome status
+            row.Cells["ChromeStatus"].Value = session.ChromeLaunched ? "Active" : "Stopped";
+        }
+    }
+
+    private void DataGridViewStreams_CellClick(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+        {
+            var columnName = dataGridViewStreams.Columns[e.ColumnIndex].Name;
+            
+            if (columnName == "Action" && e.RowIndex < _config.StreamSessions.Count)
+            {
+                var session = _config.StreamSessions[e.RowIndex];
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        if (session.IsActive)
+                        {
+                            await StopIndividualStream(session);
+                        }
+                        else
+                        {
+                            await StartIndividualStream(session);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error toggling individual stream: {ex.Message}", ex);
+                        if (InvokeRequired)
+                        {
+                            Invoke(new Action(() => 
+                            {
+                                MessageBox.Show($"Error toggling stream: {ex.Message}", "Error", 
+                                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }));
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    private void DataGridViewStreams_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+    {
+        if (e.RowIndex >= 0 && e.RowIndex < _config.StreamSessions.Count)
+        {
+            var session = _config.StreamSessions[e.RowIndex];
+            var columnName = dataGridViewStreams.Columns[e.ColumnIndex].Name;
+            
+            // Color code the status column
+            if (columnName == "Status")
+            {
+                switch (session.Status.ToLower())
+                {
+                    case "streaming":
+                    case "active":
+                        e.CellStyle.BackColor = Color.LightGreen;
+                        e.CellStyle.ForeColor = Color.DarkGreen;
+                        break;
+                    case "starting":
+                    case "initializing":
+                        e.CellStyle.BackColor = Color.LightYellow;
+                        e.CellStyle.ForeColor = Color.DarkOrange;
+                        break;
+                    case "error":
+                    case "failed":
+                        e.CellStyle.BackColor = Color.LightCoral;
+                        e.CellStyle.ForeColor = Color.DarkRed;
+                        break;
+                    case "stopping":
+                        e.CellStyle.BackColor = Color.LightGray;
+                        e.CellStyle.ForeColor = Color.Black;
+                        break;
+                    default: // Ready, Stopped, etc.
+                        e.CellStyle.BackColor = Color.White;
+                        e.CellStyle.ForeColor = Color.Black;
+                        break;
+                }
+            }
+            
+            // Color code the Action button
+            if (columnName == "Action")
+            {
+                if (session.IsActive)
+                {
+                    e.CellStyle.BackColor = Color.IndianRed;
+                    e.CellStyle.ForeColor = Color.White;
+                }
+                else
+                {
+                    e.CellStyle.BackColor = Color.LightGreen;
+                    e.CellStyle.ForeColor = Color.Black;
+                }
+            }
+        }
+    }
+
+    private async Task StartIndividualStream(StreamSession session)
+    {
+        try
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = "Starting...";
+                    RefreshStreamGrid();
+                }));
+            }
+            
+            var success = await _multiStreamService.StartStreamAsync(session);
+            
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = success ? "Streaming" : "Failed";
+                    session.IsActive = success;
+                    if (success) session.StartTime = DateTime.Now;
+                    RefreshStreamGrid();
+                    UpdateStatusLabels();
+                }));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error starting individual stream: {ex.Message}", ex);
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = "Error";
+                    session.IsActive = false;
+                    RefreshStreamGrid();
+                }));
+            }
+            throw;
+        }
+    }
+
+    private async Task StopIndividualStream(StreamSession session)
+    {
+        try
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = "Stopping...";
+                    RefreshStreamGrid();
+                }));
+            }
+            
+            var success = await _multiStreamService.StopStreamAsync(session);
+            
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = success ? "Stopped" : "Error";
+                    session.IsActive = false;
+                    session.StartTime = DateTime.MinValue;
+                    RefreshStreamGrid();
+                    UpdateStatusLabels();
+                }));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error stopping individual stream: {ex.Message}", ex);
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => 
+                {
+                    session.Status = "Error";
+                    RefreshStreamGrid();
+                }));
+            }
+            throw;
+        }
+    }
+
+    private void UpdateStatusLabels()
+    {
+        var activeCount = _config.StreamSessions.Count(s => s.IsActive);
+        toolStripStatusLabelStreams.Text = $"Active streams: {activeCount}";
         
-        // Configure columns
-        dataGridViewStreams.Columns["Id"].Visible = false;
-        dataGridViewStreams.Columns["ChromeLaunched"].Visible = false;
-        dataGridViewStreams.Columns["ChromeProcessId"].Visible = false;
-        dataGridViewStreams.Columns["StartTime"].Visible = false;
-        
-        dataGridViewStreams.AutoResizeColumns();
+        if (activeCount > 0)
+        {
+            labelStatus.Text = $"Streaming: {activeCount} of {_config.StreamSessions.Count} monitors";
+            labelStatus.ForeColor = Color.Green;
+        }
+        else if (_config.StreamSessions.Any(s => s.Status == "Failed" || s.Status == "Error"))
+        {
+            labelStatus.Text = "Some streams have errors";
+            labelStatus.ForeColor = Color.Red;
+        }
+        else
+        {
+            labelStatus.Text = "Ready";
+            labelStatus.ForeColor = Color.Black;
+        }
     }
 
     private async void ButtonStartAll_Click(object sender, EventArgs e)
@@ -393,7 +754,9 @@ public partial class MultiStreamForm : Form
             return;
         }
         
+        data.Session.Status = data.Status;
         RefreshStreamGrid();
+        UpdateStatusLabels();
     }
 
     private void UpdateUI()

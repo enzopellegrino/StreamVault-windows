@@ -68,7 +68,7 @@ public partial class DriverTroubleshootingDialog : Form
         var solutionsGroup = new GroupBox
         {
             Text = "Quick Solutions",
-            Height = 200,
+            Height = 240,  // Aumentato per più bottoni
             Dock = DockStyle.Fill
         };
 
@@ -76,7 +76,7 @@ public partial class DriverTroubleshootingDialog : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 5,
+            RowCount = 6,  // Aumentato per più bottoni
             Padding = new Padding(5)
         };
 
@@ -106,11 +106,19 @@ public partial class DriverTroubleshootingDialog : Form
 
         solutionsPanel.Controls.Add(new Button
         {
+            Text = "Run Driver Diagnosis",
+            Name = "buttonDriverDiagnosis",
+            Height = 30,
+            Dock = DockStyle.Fill
+        }, 0, 3);
+
+        solutionsPanel.Controls.Add(new Button
+        {
             Text = "Open Troubleshooting Guide",
             Name = "buttonTroubleshooting",
             Height = 30,
             Dock = DockStyle.Fill
-        }, 0, 3);
+        }, 0, 4);
 
         solutionsPanel.Controls.Add(new Button
         {
@@ -118,7 +126,7 @@ public partial class DriverTroubleshootingDialog : Form
             Name = "buttonRestartAdmin",
             Height = 30,
             Dock = DockStyle.Fill
-        }, 0, 4);
+        }, 0, 5);
 
         solutionsGroup.Controls.Add(solutionsPanel);
 
@@ -170,7 +178,7 @@ public partial class DriverTroubleshootingDialog : Form
         mainPanel.Controls.Add(buttonPanel, 0, 3);
 
         mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
-        mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 200));
+        mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 240));  // Aggiornato per il gruppo soluzioni più grande
         mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
 
@@ -180,6 +188,7 @@ public partial class DriverTroubleshootingDialog : Form
         this.Controls.Find("buttonEnableTestSigning", true).FirstOrDefault()!.Click += ButtonEnableTestSigning_Click;
         this.Controls.Find("buttonDeviceManager", true).FirstOrDefault()!.Click += ButtonDeviceManager_Click;
         this.Controls.Find("buttonEventViewer", true).FirstOrDefault()!.Click += ButtonEventViewer_Click;
+        this.Controls.Find("buttonDriverDiagnosis", true).FirstOrDefault()!.Click += ButtonDriverDiagnosis_Click;
         this.Controls.Find("buttonTroubleshooting", true).FirstOrDefault()!.Click += ButtonTroubleshooting_Click;
         this.Controls.Find("buttonRestartAdmin", true).FirstOrDefault()!.Click += ButtonRestartAdmin_Click;
         this.Controls.Find("buttonRefresh", true).FirstOrDefault()!.Click += ButtonRefresh_Click;
@@ -346,6 +355,156 @@ public partial class DriverTroubleshootingDialog : Form
         {
             MessageBox.Show($"Error opening Event Viewer: {ex.Message}", "Error", 
                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private async void ButtonDriverDiagnosis_Click(object? sender, EventArgs e)
+    {
+        try
+        {
+            var button = sender as Button;
+            button!.Enabled = false;
+            button.Text = "Running Diagnosis...";
+
+            var logTextBox = this.Controls.Find("textBoxLog", true).FirstOrDefault() as TextBox;
+            logTextBox!.Clear();
+            logTextBox.AppendText("=== Driver Diagnosis Started ===\r\n\r\n");
+
+            // Check driver files
+            logTextBox.AppendText("1. Checking driver files...\r\n");
+            var driverPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "drivers");
+            if (Directory.Exists(driverPath))
+            {
+                var infFiles = Directory.GetFiles(driverPath, "*.inf");
+                logTextBox.AppendText($"   Found {infFiles.Length} INF files\r\n");
+                foreach (var inf in infFiles)
+                {
+                    logTextBox.AppendText($"   - {Path.GetFileName(inf)}\r\n");
+                }
+            }
+            else
+            {
+                logTextBox.AppendText("   ❌ Driver folder not found!\r\n");
+            }
+
+            // Check Windows compatibility
+            logTextBox.AppendText("\r\n2. Checking Windows compatibility...\r\n");
+            var isCompatible = await _driverService.IsWindowsCompatibleAsync();
+            logTextBox.AppendText($"   Windows 10/11 compatibility: {(isCompatible ? "✅ Yes" : "❌ No")}\r\n");
+
+            // Check test signing
+            logTextBox.AppendText("\r\n3. Checking test signing...\r\n");
+            var testSigningEnabled = await _driverService.CheckTestSigningAsync();
+            logTextBox.AppendText($"   Test signing enabled: {(testSigningEnabled ? "✅ Yes" : "❌ No")}\r\n");
+
+            // Check for installed virtual display devices
+            logTextBox.AppendText("\r\n4. Checking installed virtual display devices...\r\n");
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = "-Command \"Get-PnpDevice -Class Display | Where-Object {$_.FriendlyName -like '*Virtual*' -or $_.FriendlyName -like '*IDD*'} | Format-Table -Property FriendlyName, Status, InstanceId\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                var output = await process.StandardOutput.ReadToEndAsync();
+                var error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    logTextBox.AppendText($"   Virtual display devices:\r\n{output}\r\n");
+                }
+                else
+                {
+                    logTextBox.AppendText("   No virtual display devices found\r\n");
+                }
+
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    logTextBox.AppendText($"   Errors: {error}\r\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                logTextBox.AppendText($"   Error checking devices: {ex.Message}\r\n");
+            }
+
+            // Check system logs for driver-related errors
+            logTextBox.AppendText("\r\n5. Checking recent system logs for driver errors...\r\n");
+            try
+            {
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        Arguments = "-Command \"Get-WinEvent -FilterHashtable @{LogName='System'; Level=1,2; StartTime=(Get-Date).AddDays(-1)} | Where-Object {$_.Message -like '*driver*' -or $_.Message -like '*display*'} | Select-Object -First 5 | Format-Table -Property TimeCreated, Id, LevelDisplayName, Message\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+
+                process.Start();
+                var output = await process.StandardOutput.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    logTextBox.AppendText($"   Recent driver-related errors:\r\n{output}\r\n");
+                }
+                else
+                {
+                    logTextBox.AppendText("   No recent driver-related errors found\r\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                logTextBox.AppendText($"   Error checking system logs: {ex.Message}\r\n");
+            }
+
+            logTextBox.AppendText("\r\n=== Diagnosis Complete ===\r\n");
+            logTextBox.AppendText("\r\nRecommendations:\r\n");
+
+            if (!await _driverService.IsWindowsCompatibleAsync())
+            {
+                logTextBox.AppendText("- Upgrade to Windows 10 (1903+) or Windows 11\r\n");
+            }
+
+            if (!_driverService.IsRunningAsAdministrator())
+            {
+                logTextBox.AppendText("- Run StreamVault as Administrator\r\n");
+            }
+
+            if (!await _driverService.CheckTestSigningAsync())
+            {
+                logTextBox.AppendText("- Enable test signing and restart computer\r\n");
+            }
+
+            logTextBox.AppendText("- Check Event Viewer for detailed error messages\r\n");
+            logTextBox.AppendText("- Ensure antivirus is not blocking driver installation\r\n");
+
+            button.Text = "Run Driver Diagnosis";
+            button.Enabled = true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error running driver diagnosis: {ex.Message}", "Error", 
+                           MessageBoxButtons.OK, MessageBoxIcon.Error);
+            
+            var button = sender as Button;
+            button!.Text = "Run Driver Diagnosis";
+            button.Enabled = true;
         }
     }
 

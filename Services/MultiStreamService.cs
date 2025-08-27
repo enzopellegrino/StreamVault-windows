@@ -85,6 +85,30 @@ public class MultiStreamService
     }
 
     /// <summary>
+    /// Start streaming for a specific session (wrapper for UI)
+    /// </summary>
+    public async Task<bool> StartStreamAsync(StreamSession session)
+    {
+        return await StartStreamSessionAsync(session);
+    }
+
+    /// <summary>
+    /// Stop streaming for a specific session (wrapper for UI)
+    /// </summary>
+    public async Task<bool> StopStreamAsync(StreamSession session)
+    {
+        return await StopStreamSessionAsync(session);
+    }
+
+    /// <summary>
+    /// Get the count of currently active streams
+    /// </summary>
+    public int GetActiveStreamCount()
+    {
+        return _activeStreams.Count;
+    }
+
+    /// <summary>
     /// Start streaming for a specific session
     /// </summary>
     public async Task<bool> StartStreamSessionAsync(StreamSession session)
@@ -216,14 +240,6 @@ public class MultiStreamService
             _logger.LogError($"Error stopping all streams: {ex.Message}", ex);
             return false;
         }
-    }
-
-    /// <summary>
-    /// Get active stream count
-    /// </summary>
-    public int GetActiveStreamCount()
-    {
-        return _activeStreams.Count;
     }
 
     /// <summary>

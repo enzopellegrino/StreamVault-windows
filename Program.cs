@@ -20,7 +20,8 @@ static class Program
         
         try
         {
-            Application.Run(new MainForm());
+            // Start directly with the Multi-Monitor Streaming interface
+            Application.Run(new MultiStreamForm());
         }
         catch (Exception ex)
         {

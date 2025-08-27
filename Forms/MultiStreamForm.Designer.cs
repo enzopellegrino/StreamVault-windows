@@ -81,14 +81,14 @@ namespace StreamVault.Forms
             this.groupBoxConfiguration.Controls.Add(this.labelBaseHost);
             this.groupBoxConfiguration.Location = new System.Drawing.Point(12, 12);
             this.groupBoxConfiguration.Name = "groupBoxConfiguration";
-            this.groupBoxConfiguration.Size = new System.Drawing.Size(1180, 120);  // Allargato da 760 a 1180
+            this.groupBoxConfiguration.Size = new System.Drawing.Size(1180, 140);  // Aumentato da 120 a 140 per più spazio
             this.groupBoxConfiguration.TabIndex = 0;
             this.groupBoxConfiguration.TabStop = false;
-            this.groupBoxConfiguration.Text = "Multi-Stream Configuration";
+            this.groupBoxConfiguration.Text = "Streaming Configuration";
             // 
             // buttonDebugFFmpeg
             // 
-            this.buttonDebugFFmpeg.Location = new System.Drawing.Point(1000, 25);
+            this.buttonDebugFFmpeg.Location = new System.Drawing.Point(930, 85);  // Spostato per non sovrapporsi
             this.buttonDebugFFmpeg.Name = "buttonDebugFFmpeg";
             this.buttonDebugFFmpeg.Size = new System.Drawing.Size(100, 25);
             this.buttonDebugFFmpeg.TabIndex = 10;
@@ -98,7 +98,7 @@ namespace StreamVault.Forms
             // 
             // buttonSaveConfig
             // 
-            this.buttonSaveConfig.Location = new System.Drawing.Point(1000, 80);
+            this.buttonSaveConfig.Location = new System.Drawing.Point(820, 85);  // Spostato per non sovrapporsi
             this.buttonSaveConfig.Name = "buttonSaveConfig";
             this.buttonSaveConfig.Size = new System.Drawing.Size(100, 25);
             this.buttonSaveConfig.TabIndex = 9;
@@ -108,9 +108,9 @@ namespace StreamVault.Forms
             // 
             // buttonTestChrome
             // 
-            this.buttonTestChrome.Location = new System.Drawing.Point(890, 80);
+            this.buttonTestChrome.Location = new System.Drawing.Point(710, 85);  // Spostato per non sovrapporsi
             this.buttonTestChrome.Name = "buttonTestChrome";
-            this.buttonTestChrome.Size = new System.Drawing.Size(80, 25);
+            this.buttonTestChrome.Size = new System.Drawing.Size(100, 25);
             this.buttonTestChrome.TabIndex = 8;
             this.buttonTestChrome.Text = "Test Chrome";
             this.buttonTestChrome.UseVisualStyleBackColor = true;
@@ -118,11 +118,11 @@ namespace StreamVault.Forms
             // 
             // buttonGenerateUrls
             // 
-            this.buttonGenerateUrls.Location = new System.Drawing.Point(700, 25);
+            this.buttonGenerateUrls.Location = new System.Drawing.Point(580, 85);  // Spostato per non sovrapporsi
             this.buttonGenerateUrls.Name = "buttonGenerateUrls";
-            this.buttonGenerateUrls.Size = new System.Drawing.Size(170, 25);
+            this.buttonGenerateUrls.Size = new System.Drawing.Size(120, 25);  // Ridotto per dare più spazio
             this.buttonGenerateUrls.TabIndex = 7;
-            this.buttonGenerateUrls.Text = "Generate SRT URLs";
+            this.buttonGenerateUrls.Text = "Generate URLs";
             this.buttonGenerateUrls.UseVisualStyleBackColor = true;
             this.buttonGenerateUrls.Click += new System.EventHandler(this.ButtonGenerateUrls_Click);
             // 
@@ -230,7 +230,7 @@ namespace StreamVault.Forms
             // 
             // buttonVirtualDesktops
             // 
-            this.buttonVirtualDesktops.Location = new System.Drawing.Point(860, 32);
+            this.buttonVirtualDesktops.Location = new System.Drawing.Point(980, 32);  // Spostato leggermente
             this.buttonVirtualDesktops.Name = "buttonVirtualDesktops";
             this.buttonVirtualDesktops.Size = new System.Drawing.Size(120, 23);
             this.buttonVirtualDesktops.TabIndex = 23;
@@ -241,12 +241,12 @@ namespace StreamVault.Forms
             // groupBoxStreams
             // 
             this.groupBoxStreams.Controls.Add(this.dataGridViewStreams);
-            this.groupBoxStreams.Location = new System.Drawing.Point(12, 140);
+            this.groupBoxStreams.Location = new System.Drawing.Point(12, 160);  // Adattato per il nuovo layout
             this.groupBoxStreams.Name = "groupBoxStreams";
-            this.groupBoxStreams.Size = new System.Drawing.Size(1180, 390);  // Aumentato da 760x320 a 1180x390
+            this.groupBoxStreams.Size = new System.Drawing.Size(1180, 400);  // Aumentato da 390 a 400
             this.groupBoxStreams.TabIndex = 1;
             this.groupBoxStreams.TabStop = false;
-            this.groupBoxStreams.Text = "Stream Sessions";
+            this.groupBoxStreams.Text = "Active Streams";
             // 
             // dataGridViewStreams
             // 
@@ -256,10 +256,10 @@ namespace StreamVault.Forms
             this.dataGridViewStreams.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewStreams.Location = new System.Drawing.Point(10, 25);
             this.dataGridViewStreams.Name = "dataGridViewStreams";
-            this.dataGridViewStreams.ReadOnly = true;
+            this.dataGridViewStreams.ReadOnly = false;  // Cambiato per permettere i bottoni
             this.dataGridViewStreams.RowHeadersWidth = 51;
             this.dataGridViewStreams.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewStreams.Size = new System.Drawing.Size(1160, 350);  // Aumentato da 740x285 a 1160x350
+            this.dataGridViewStreams.Size = new System.Drawing.Size(1160, 360);  // Aumentato da 350 a 360
             this.dataGridViewStreams.TabIndex = 0;
             // 
             // groupBoxControl
@@ -268,7 +268,7 @@ namespace StreamVault.Forms
             this.groupBoxControl.Controls.Add(this.buttonAddMonitor);
             this.groupBoxControl.Controls.Add(this.buttonRefreshMonitors);
             this.groupBoxControl.Controls.Add(this.buttonStartAll);
-            this.groupBoxControl.Location = new System.Drawing.Point(12, 600);  // Spostato da 470 a 600
+            this.groupBoxControl.Location = new System.Drawing.Point(12, 570);  // Adattato per il nuovo layout
             this.groupBoxControl.Name = "groupBoxControl";
             this.groupBoxControl.Size = new System.Drawing.Size(1160, 80);  // Allargato da 760 a 1160
             this.groupBoxControl.TabIndex = 2;
@@ -314,7 +314,7 @@ namespace StreamVault.Forms
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabelStreams,
             this.toolStripStatusLabelChrome});
-            this.statusStrip.Location = new System.Drawing.Point(0, 720);  // Spostato da 558 a 720
+            this.statusStrip.Location = new System.Drawing.Point(0, 660);  // Adattato per il nuovo layout
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(1200, 22);  // Allargato da 784 a 1200
             this.statusStrip.TabIndex = 3;
@@ -346,7 +346,7 @@ namespace StreamVault.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 580);
+            this.ClientSize = new System.Drawing.Size(1210, 682);  // Adattato alle nuove dimensioni
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.groupBoxControl);
             this.Controls.Add(this.groupBoxStreams);
@@ -355,7 +355,7 @@ namespace StreamVault.Forms
             this.MaximizeBox = true;  // Cambiato da false a true
             this.MinimizeBox = true;  // Cambiato da false a true
             this.Name = "MultiStreamForm";
-            this.Text = "StreamVault - Multi-Monitor Streaming";
+            this.Text = "StreamVault - Screen Capture & Streaming";
             this.groupBoxConfiguration.ResumeLayout(false);
             this.groupBoxConfiguration.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericBasePort)).EndInit();
