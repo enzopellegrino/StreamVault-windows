@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "=============================================="
-echo "StreamVault v1.3.0 Installer Builder"
+echo "StreamVault v1.4.0 Installer Builder"
 echo "=============================================="
 echo ""
 
@@ -48,8 +48,8 @@ APP_SIZE=$(du -sh app | cut -f1)
 DRIVERS_SIZE=$(du -sh ../drivers | cut -f1)
 
 echo "Building installer with the following components:"
-echo "• StreamVault v1.3.0 application ($APP_SIZE)"
-echo "• Virtual Desktop Drivers ($DRIVERS_SIZE)"
+echo "• StreamVault v1.4.0 application (161M)"
+echo "• Virtual Desktop Drivers ( 16K)"
 echo "• FFmpeg integration (downloaded during install)"
 echo "• Desktop and Start Menu shortcuts"
 echo "• Professional uninstaller"
@@ -72,7 +72,7 @@ if makensis StreamVault_Professional.nsi; then
         echo "Size: $INSTALLER_SIZE"
         echo ""
         echo "The installer includes:"
-        echo "• StreamVault v1.3.0 with virtual desktop support"
+        echo "• StreamVault v1.4.0 with virtual desktop support"
         echo "• IddSampleDriver for virtual display creation"
         echo "• Automatic FFmpeg download and setup"
         echo "• Professional Windows integration"
@@ -99,5 +99,5 @@ fi
 echo ""
 
 echo "=============================================="
-echo "✅ StreamVault v1.3.0 installer build complete!"
+echo "✅ StreamVault v1.4.0 installer build complete!"
 echo "=============================================="

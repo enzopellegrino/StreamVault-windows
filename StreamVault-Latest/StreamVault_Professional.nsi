@@ -5,8 +5,8 @@
 ;--------------------------------
 ; Installer Configuration
 !define APP_NAME "StreamVault"
-!define APP_VERSION "1.3.0"
-!define PRODUCT_VERSION "1.3.0"
+!define APP_VERSION "1.4.0"
+!define PRODUCT_VERSION "1.4.0"
 !define APP_PUBLISHER "StreamVault Team"
 !define APP_URL "https://github.com/enzopellegrino/StreamVault-windows"
 !define APP_DESCRIPTION "Professional Multi-Monitor SRT Streaming with Virtual Desktop Support"
